@@ -1,11 +1,14 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext(null);
 
+const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 minutes in milliseconds
+
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('finTrack_token'));
   const [user, setUser] = useState(null);
+  const [lastActivity, setLastActivity] = useState(Date.now());
 
   // Set default axios header
   if (token) {
@@ -24,6 +27,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('finTrack_token', access_token);
         setToken(access_token);
         axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+        setLastActivity(Date.now()); // Reset activity on login
         return true;
     } catch (error) {
         console.error("Login failed", error);
@@ -46,12 +50,42 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('finTrack_token');
     setToken(null);
     setUser(null);
     delete axios.defaults.headers.common['Authorization'];
-  };
+  }, []);
+
+  // Inactivity Logic
+  useEffect(() => {
+    if (!token) return;
+
+    const handleActivity = () => {
+        setLastActivity(Date.now());
+    };
+
+    // Events to track
+    window.addEventListener('mousemove', handleActivity);
+    window.addEventListener('keydown', handleActivity);
+    window.addEventListener('click', handleActivity);
+    window.addEventListener('scroll', handleActivity);
+
+    const interval = setInterval(() => {
+        if (Date.now() - lastActivity > INACTIVITY_LIMIT) {
+            console.log("Session timed out due to inactivity");
+            logout();
+        }
+    }, 1000 * 60); // Check every minute
+
+    return () => {
+        window.removeEventListener('mousemove', handleActivity);
+        window.removeEventListener('keydown', handleActivity);
+        window.removeEventListener('click', handleActivity);
+        window.removeEventListener('scroll', handleActivity);
+        clearInterval(interval);
+    };
+  }, [token, lastActivity, logout]);
 
   return (
     <AuthContext.Provider value={{ token, login, register, logout }}>
