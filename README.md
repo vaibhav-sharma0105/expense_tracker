@@ -53,6 +53,39 @@ A robust, full-stack expense tracking application designed for personal finance 
     ```
     The App will run at `http://localhost:5173`.
 
+## Upgrading to v2 (Product Feedback Update)
+
+If you are upgrading from a previous version and want to keep your existing data (database), follow these steps:
+
+1.  **Switch to the new branch**:
+    ```bash
+    git checkout product-feedbacks
+    ```
+
+2.  **Update Dependencies**:
+    *   Backend:
+        ```bash
+        pip install -r backend/requirements.txt
+        # Ensure python-multipart is installed for new forms
+        pip install python-multipart
+        ```
+    *   Frontend:
+        ```bash
+        cd frontend
+        npm install
+        ```
+
+3.  **Migrate Database**:
+    We have added a new `comment` field to transactions. Run this script to safely update your existing database without data loss:
+    ```bash
+    # From the root directory
+    python backend/migrate_db.py
+    ```
+    *This script checks if the 'comment' column exists and adds it if missing.*
+
+4.  **Restart Servers**:
+    Restart both your backend (Uvicorn) and frontend (Vite) servers to see the changes.
+
 ## Usage Guide
 
 1.  **Register:** Create a new account.

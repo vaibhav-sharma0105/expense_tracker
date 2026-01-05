@@ -35,6 +35,7 @@ class Transaction(Base):
     category = Column(String)
     tag = Column(String) # Need, Want, Savings
     mode = Column(String) # UPI, Credit Card, etc.
+    comment = Column(String, nullable=True)
     
     user_id = Column(Integer, ForeignKey("users.id"))
     card_id = Column(Integer, ForeignKey("cards.id"), nullable=True)

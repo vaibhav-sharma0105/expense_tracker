@@ -50,6 +50,19 @@ def create_transaction(tx: schemas.TransactionCreate, db: Session = Depends(data
     db.refresh(new_tx)
     return new_tx
 
+@router.put("/{tx_id}", response_model=schemas.Transaction)
+def update_transaction(tx_id: int, tx_data: schemas.TransactionCreate, db: Session = Depends(database.get_db), current_user: models.User = Depends(get_current_user)):
+    tx = db.query(models.Transaction).filter(models.Transaction.id == tx_id, models.Transaction.user_id == current_user.id).first()
+    if not tx:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    for key, value in tx_data.model_dump().items():
+        setattr(tx, key, value)
+
+    db.commit()
+    db.refresh(tx)
+    return tx
+
 @router.delete("/{tx_id}")
 def delete_transaction(tx_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(get_current_user)):
     tx = db.query(models.Transaction).filter(models.Transaction.id == tx_id, models.Transaction.user_id == current_user.id).first()

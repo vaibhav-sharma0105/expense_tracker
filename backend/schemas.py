@@ -42,6 +42,7 @@ class TransactionBase(BaseModel):
     category: str
     tag: str
     mode: str
+    comment: Optional[str] = None
     card_id: Optional[int] = None
 
 class TransactionCreate(TransactionBase):
